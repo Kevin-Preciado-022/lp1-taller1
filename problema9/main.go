@@ -15,21 +15,38 @@ import (
 type tenedor struct{ mu sync.Mutex }
 
 func filosofo(id int, izq, der *tenedor, wg *sync.WaitGroup) {
-	// TODO: desarrolla el código para el filósofo
-	
+	defer wg.Done()
+	for i := 0; i < 3; i++ {
+		// Estrategia segura: tomar tenedores en orden ascendente de IDs
+		if id%2 == 0 {
+			izq.mu.Lock()
+			der.mu.Lock()
+		} else {
+			der.mu.Lock()
+			izq.mu.Lock()
+		}
+
+		fmt.Printf("[filósofo %d] toma tenedores\n", id)
+		comer(id)
+		fmt.Printf("[filósofo %d] deja tenedores\n", id)
+		izq.mu.Unlock()
+		der.mu.Unlock()
+
+		pensar(id)
+	}
 	fmt.Printf("[filósofo %d] satisfecho\n", id)
 }
 
 func pensar(id int) {
 	fmt.Printf("[filósofo %d] pensando...\n", id)
 	// TODO: simular tiempo de pensar
-
+	time.Sleep(time.Duration(100+id*50) * time.Millisecond) // ejemplo de tiempo variable
 }
 
 func comer(id int) {
 	fmt.Printf("[filósofo %d] COMIENDO\n", id)
 	// TODO: simular tiempo de pensar
-
+	time.Sleep(time.Duration(150+id*50) * time.Millisecond) // ejemplo de tiempo variable
 }
 
 func main() {
@@ -41,6 +58,7 @@ func main() {
 	forks := make([]*tenedor, n)
 	for i := 0; i < n; i++ {
 		// TODO: inicializar cada tenedor i
+		forks[i] = &tenedor{}
 
 	}
 
@@ -49,6 +67,7 @@ func main() {
 		izq := forks[i]
 		der := forks[(i+1)%n]
 		// TODO: lanzar goroutine para el filósofo i
+		go filosofo(i, izq, der, &wg)
 
 	}
 
